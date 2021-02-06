@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using System.Linq;
+using System.Net;
 using TACT.Net.Cryptography;
 using TACT.Net.Network;
 
@@ -34,6 +36,11 @@ namespace TACT.Net.Configs
         /// Current Locale
         /// </summary>
         public readonly Locale Locale;
+        private readonly string PatchUrl = null;
+        private readonly int OverrideBuildId;
+        private readonly string OverrideVersionName;
+        private readonly string OverrideBuildConfig;
+        private readonly string OverrideCdnConfig;
 
         #region Constructors
 
@@ -43,6 +50,16 @@ namespace TACT.Net.Configs
             Locale = locale;
         }
 
+        public ManifestContainer(string product, Locale locale, string patchUrl, int overrideBuildId = 0, string overrideVersionName = null, string overrideBuildConfig = null, string overrideCdnConfig = null)
+        {
+            Product = product;
+            Locale = locale;
+            PatchUrl = patchUrl;
+            OverrideBuildId = overrideBuildId;
+            OverrideVersionName = overrideVersionName;
+            OverrideBuildConfig = overrideBuildConfig;
+            OverrideCdnConfig = overrideCdnConfig;
+        }
         #endregion
 
         #region Methods
@@ -72,12 +89,46 @@ namespace TACT.Net.Configs
         /// </summary>
         public void OpenRemote()
         {
+            if (PatchUrl == null)
+                OpenRemoteRibbit();
+            else
+                OpenRemotePatchUrl();
+
+            OverrideRemoteVersion();
+        }
+
+        private void OpenRemoteRibbit()
+        {
             var ribbit = new RibbitClient(Locale);
 
             using var cdnstream = ribbit.GetStream(RibbitCommand.CDNs, Product).Result;
             using var verstream = ribbit.GetStream(RibbitCommand.Versions, Product).Result;
             CDNsFile = new VariableConfig(cdnstream, ConfigType.CDNs);
             VersionsFile = new VariableConfig(verstream, ConfigType.Versions);
+        }
+
+        private void OpenRemotePatchUrl()
+        {
+            using (WebClient webClient = new WebClient())
+            {
+                CDNsFile = new VariableConfig(webClient.OpenRead($"{PatchUrl}/{Product}/cdns"), ConfigType.CDNs);
+                VersionsFile = new VariableConfig(webClient.OpenRead($"{PatchUrl}/{Product}/versions"), ConfigType.Versions);
+            }
+        }
+
+        private void OverrideRemoteVersion()
+        {
+            if (OverrideBuildId > 0)
+                VersionsFile.SetValue("BuildId", OverrideBuildId);
+
+            if (!string.IsNullOrEmpty(OverrideVersionName))
+                VersionsFile.SetValue("VersionsName", OverrideVersionName);
+
+            if (!string.IsNullOrEmpty(OverrideBuildConfig))
+                VersionsFile.SetValue("BuildConfig", OverrideBuildConfig);
+
+            if (!string.IsNullOrEmpty(OverrideCdnConfig))
+                VersionsFile.SetValue("CDNConfig", OverrideCdnConfig);
         }
 
         /// <summary>
@@ -99,9 +150,7 @@ namespace TACT.Net.Configs
             CDNsFile?.Write(directory, Product);
             VersionsFile?.Write(directory, Product);
         }
-
         #endregion
-
 
         #region Helpers
 
