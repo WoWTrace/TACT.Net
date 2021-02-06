@@ -212,9 +212,9 @@ namespace TACT.Net.Indices
             // update the CDN Config
             UpdateConfig(configContainer, newChecksum, bw.BaseStream.Length);
 
-            //// remove old index file
-            //if (!Checksum.IsEmpty)
-            //    Helpers.Delete(Checksum.ToString() + ".index", directory);
+            // remove old index file
+            if (Checksum.Value != null && Checksum.Value != newChecksum.Value)
+                Helpers.Delete(Checksum.ToString() + ".index", directory);
 
             // update Checksum
             Checksum = newChecksum;
@@ -258,6 +258,10 @@ namespace TACT.Net.Indices
                 if (Path.GetFileName(prevBlob).Equals(Checksum.ToString(), StringComparison.OrdinalIgnoreCase))
                 {
                     File.Copy(prevBlob, saveLocation, true);
+
+                    if (prevBlob != saveLocation)
+                        Helpers.Delete(prevBlob, true);
+
                     return;
                 }
 
@@ -287,6 +291,9 @@ namespace TACT.Net.Indices
                     }
                 }
             }
+
+            if (prevBlob != "" && prevBlob != saveLocation)
+                Helpers.Delete(prevBlob, true);
 
             _newEntries.Clear();
         }

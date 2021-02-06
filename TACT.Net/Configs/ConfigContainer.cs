@@ -153,7 +153,7 @@ namespace TACT.Net.Configs
         /// Saves the configs using to the Blizzard standard location
         /// </summary>
         /// <param name="directory"></param>
-        public void Save(string directory, ManifestContainer manifestContainer = null)
+        public void Save(string directory, ManifestContainer manifestContainer = null, TACTRepo tactRepo = null)
         {
             // save and update patch config value
             if (PatchConfig != null)
@@ -162,13 +162,28 @@ namespace TACT.Net.Configs
                 BuildConfig?.SetValue("patch-config", PatchConfig.Checksum.ToString());
             }
 
+            string oldBuildConfig = (BuildConfig.Checksum.Value == null ? "" : BuildConfig.Checksum.ToString());
+            string oldCdnConfig = (CDNConfig.Checksum.Value == null ? "" : CDNConfig.Checksum.ToString());
+
             // save the localised configs
             BuildConfig?.Write(directory);
             CDNConfig?.Write(directory);
 
+            string buildConfig = BuildConfig.Checksum.ToString();
+            string cdnConfig = CDNConfig.Checksum.ToString();
+
+            if (tactRepo != null)
+            {
+                if (oldBuildConfig != "" && oldBuildConfig != buildConfig)
+                    tactRepo.CleanupQueue.Enqueue(Helpers.GetCDNPath(oldBuildConfig, "config", directory));
+
+                if (oldCdnConfig != "" && oldCdnConfig != cdnConfig)
+                    tactRepo.CleanupQueue.Enqueue(Helpers.GetCDNPath(oldCdnConfig, "config", directory));
+            }
+
             // update the hashes
-            manifestContainer?.VersionsFile.SetValue("buildconfig", BuildConfig.Checksum.ToString());
-            manifestContainer?.VersionsFile.SetValue("cdnconfig", CDNConfig.Checksum.ToString());
+            manifestContainer?.VersionsFile.SetValue("buildconfig", buildConfig);
+            manifestContainer?.VersionsFile.SetValue("cdnconfig", cdnConfig);
         }
 
         #endregion

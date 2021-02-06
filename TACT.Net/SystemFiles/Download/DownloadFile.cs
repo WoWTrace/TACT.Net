@@ -154,6 +154,9 @@ namespace TACT.Net.Download
 
             if (tactRepo != null)
             {
+                if (FilePath != record.BLTEPath)
+                    tactRepo.CleanupQueue.Enqueue(FilePath);
+
                 // insert the record into the encoding
                 tactRepo.EncodingFile?.AddOrUpdate(record);
 

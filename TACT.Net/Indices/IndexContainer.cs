@@ -191,6 +191,17 @@ namespace TACT.Net.Indices
                     if (index.IsGroupIndex)
                         continue;
 
+                    if (!index.Entries.Any())
+                    {
+                        if (!index.Checksum.IsEmpty)
+                        {
+                            Helpers.Delete(index.Checksum.ToString(), directory);
+                            Helpers.Delete(index.Checksum.ToString() + ".index", directory);
+                        }
+
+                        continue;
+                    }
+
                     if (index.RequiresSave)
                     {
                         // save the index file and blob

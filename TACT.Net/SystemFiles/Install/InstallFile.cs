@@ -154,6 +154,9 @@ namespace TACT.Net.Install
             // insert the record into the encoding and the download files
             if (tactRepo != null)
             {
+                if (FilePath != record.BLTEPath)
+                    tactRepo.CleanupQueue.Enqueue(FilePath);
+
                 tactRepo.EncodingFile?.AddOrUpdate(record, tactRepo);
 
                 // update the build config with the new values

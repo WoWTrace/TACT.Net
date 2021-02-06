@@ -197,6 +197,9 @@ namespace TACT.Net.Encoding
                 record.BLTEPath = saveLocation;
             }
 
+            if (repo != null && FilePath != record.BLTEPath)
+                repo.CleanupQueue.Enqueue(FilePath);
+
             // update the build config with the new values
             if (repo?.ConfigContainer?.BuildConfig != null)
             {

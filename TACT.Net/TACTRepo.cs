@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using TACT.Net.Common;
 using TACT.Net.Cryptography;
@@ -13,10 +16,21 @@ namespace TACT.Net
         /// The root archive folder containing all files typically "tpr/wow/"
         /// </summary>
         public string BaseDirectory { get; private set; }
+
         /// <summary>
         /// The client build number of the repo
         /// </summary>
         public uint Build { get; private set; }
+
+        /// <summary>
+        /// Remove unused TACT files after save storage
+        /// </summary>
+        public bool ActiveCleanup = false;
+
+        /// <summary>
+        /// Cleanup queue
+        /// </summary>
+        public Queue<string> CleanupQueue = new Queue<string>();
 
         #region System Files
 
@@ -107,7 +121,7 @@ namespace TACT.Net
                 Build = build;
 
             IndexContainer = new Indices.IndexContainer();
-            IndexContainer.Open(directory);
+            IndexContainer.Open(directory, ConfigContainer, true);
 
             if (!ConfigContainer.EncodingEKey.IsEmpty)
             {
@@ -199,10 +213,14 @@ namespace TACT.Net
         /// <param name="locale"></param>
         public void DownloadRemote(string tprDirectory, string product, Locale locale, bool systemFileOnly = false)
         {
-            ManifestContainer = new Configs.ManifestContainer(product, locale);
+            if (ManifestContainer == null)
+                ManifestContainer = new Configs.ManifestContainer(product, locale);
+
             ManifestContainer.DownloadRemote(BaseDirectory);
 
-            ConfigContainer = new Configs.ConfigContainer();
+            if (ConfigContainer == null)
+                ConfigContainer = new Configs.ConfigContainer();
+
             ConfigContainer.DownloadRemote(tprDirectory, ManifestContainer);
 
             var cdnClient = new CDNClient(ManifestContainer);
@@ -220,19 +238,19 @@ namespace TACT.Net
 
                 // Download RootFile
                 if (EncodingFile.TryGetCKeyEntry(ConfigContainer.RootCKey, out var ekeyEntry))
-                    ekeyEntry.EKeys.ForEach(x => queuedDownload.Enqueue(x.Value.ToString()));                    
+                    ekeyEntry.EKeys.ForEach(x => queuedDownload.Enqueue(x.ToString()));                    
 
                 // Download InstallFile
                 if (EncodingFile.TryGetCKeyEntry(ConfigContainer.InstallCKey, out ekeyEntry))
-                    ekeyEntry.EKeys.ForEach(x => queuedDownload.Enqueue(x.Value.ToString()));
+                    ekeyEntry.EKeys.ForEach(x => queuedDownload.Enqueue(x.ToString()));
 
                 // Download DownloadFile
                 if (EncodingFile.TryGetCKeyEntry(ConfigContainer.DownloadCKey, out ekeyEntry))
-                    ekeyEntry.EKeys.ForEach(x => queuedDownload.Enqueue(x.Value.ToString()));
+                    ekeyEntry.EKeys.ForEach(x => queuedDownload.Enqueue(x.ToString()));
 
                 // Download DownloadSizeFile
                 if (EncodingFile.TryGetCKeyEntry(ConfigContainer.DownloadSizeCKey, out ekeyEntry))
-                    ekeyEntry.EKeys.ForEach(x => queuedDownload.Enqueue(x.Value.ToString()));
+                    ekeyEntry.EKeys.ForEach(x => queuedDownload.Enqueue(x.ToString()));
 
                 queuedDownload.Download("data");
             }
@@ -264,7 +282,7 @@ namespace TACT.Net
             DownloadSizeFile?.Write(directory, this);
             InstallFile?.Write(directory, this);
             EncodingFile?.Write(directory, this);
-            ConfigContainer?.Save(directory, ManifestContainer);
+            ConfigContainer?.Save(directory, ManifestContainer, this);
 
             // save the manifests
             if (string.IsNullOrWhiteSpace(manifestDirectory))
@@ -273,8 +291,34 @@ namespace TACT.Net
             ManifestContainer?.Save(manifestDirectory);
 
             RootFile?.FileLookup?.Close();
+
+            Cleanup(directory);
         }
 
+        private void Cleanup(string directory)
+        {
+            if (!ActiveCleanup)
+                return;
+
+            while (CleanupQueue.Any())
+            {
+                string dataPath = CleanupQueue.Dequeue();
+                if (File.Exists(dataPath))
+                    File.Delete(dataPath);
+            }
+
+            CleanupEmptyFolder(directory);
+        }
+
+        private void CleanupEmptyFolder(string startLocation)
+        {
+            foreach (var directory in Directory.GetDirectories(startLocation))
+            {
+                CleanupEmptyFolder(directory);
+                if (Directory.GetFiles(directory).Length == 0 && Directory.GetDirectories(directory).Length == 0)
+                    Directory.Delete(directory, false);
+            }
+        }
         #endregion
 
         #region Helpers
