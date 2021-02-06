@@ -111,7 +111,7 @@ namespace TACT.Net.BlockTable
             bt.Write(data);
             var record = bt.Finalise();
 
-            string saveLocation = Path.Combine(directory, record.EKey.ToString());
+            string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
             using (var fs = Helpers.Create(saveLocation))
             {
                 bt.WriteTo(fs);
@@ -140,7 +140,7 @@ namespace TACT.Net.BlockTable
             var record = bt.Finalise();
 
             // save the encoded file
-            string saveLocation = Path.Combine(directory, record.EKey.ToString());
+            string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
             using (var fs = Helpers.Create(saveLocation))
             {
                 bt.WriteTo(fs);
@@ -166,7 +166,7 @@ namespace TACT.Net.BlockTable
             stream.CopyTo(bt);
             var record = bt.Finalise();
 
-            string saveLocation = Path.Combine(directory, record.EKey.ToString());
+            string saveLocation = Helpers.GetCDNPath(record.EKey.ToString(), "data", directory, true);
             using (var fs = Helpers.Create(saveLocation))
             {
                 bt.WriteTo(fs);
