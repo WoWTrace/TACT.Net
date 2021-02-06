@@ -199,6 +199,9 @@ namespace TACT.Net.Root
             // add to the encoding file and update the build config
             if (tactRepo != null)
             {
+                if (FilePath != record.BLTEPath)
+                    tactRepo.CleanupQueue.Enqueue(FilePath);
+
                 tactRepo.EncodingFile?.AddOrUpdate(record, tactRepo);
                 tactRepo.ConfigContainer?.BuildConfig?.SetValue("root", record.CKey, 0);
             }
@@ -225,9 +228,11 @@ namespace TACT.Net.Root
             var rootRecord = new RootRecord()
             {
                 CKey = record.CKey,
-                NameHash = _lookup3.ComputeHash(record.FileName),
                 FileId = FileLookup.GetOrCreateFileId(record.FileName)
             };
+
+            if (!ContentFlags.HasFlag(ContentFlags.NoNameHash))
+                rootRecord.NameHash = _lookup3.ComputeHash(record.FileName);
 
             AddOrUpdate(rootRecord);
 
@@ -533,6 +538,24 @@ namespace TACT.Net.Root
                     if ((block.ContentFlags & content) == content)
                         yield return block;
         }
+
+        /// <summary>
+        /// Returns a collection of RootBlocks filtered by fileId
+        /// </summary>
+        /// <param name="fileId"></param>
+        /// <returns></returns>
+        public IEnumerable<IRootBlock> GetBlocksByFileId(uint fileId, LocaleFlags localeFlag = LocaleFlags.None)
+        {
+            if (localeFlag == LocaleFlags.None)
+                localeFlag = LocaleFlags;
+
+            var blocks = GetBlocks(localeFlag, ContentFlags);
+
+            foreach (var block in blocks)
+                if (block.Records.TryGetValue(fileId, out var record))
+                    yield return block;
+        }
+
         /// <summary>
         /// Removes a RootBlock from the collection
         /// </summary>
