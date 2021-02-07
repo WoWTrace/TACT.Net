@@ -89,7 +89,7 @@ namespace TACT.Net.Configs
         /// </summary>
         public void OpenRemote()
         {
-            if (PatchUrl == null)
+            if (string.IsNullOrEmpty(PatchUrl))
                 OpenRemoteRibbit();
             else
                 OpenRemotePatchUrl();
