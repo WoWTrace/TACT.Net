@@ -266,9 +266,8 @@ namespace TACT.Net.Root
 
             if (blocks.Any())
             {
-                // update existing entries
-                foreach (var block in blocks)
-                    block.Records[fileId] = rootRecord;
+                var block = blocks.OrderByDescending(x => x.Records.Count()).First();
+                block.Records[fileId] = rootRecord;
             }
             else
             {
