@@ -252,9 +252,19 @@ namespace TACT.Net.Root
             if (nameHash != 0)
                 _idLookup[nameHash] = fileId;
 
-            var blocks = GetBlocks(LocaleFlags, ContentFlags).Where(x => x.Records.ContainsKey(fileId));
+            var blocks = GetBlocks(LocaleFlags, ContentFlags);
 
-            if(blocks.Any())
+            if (blocks.Count() > 1)
+            {
+                var blocksByFileId = blocks.Where(x => x.Records.ContainsKey(fileId));
+
+                if (blocksByFileId.Any())
+                    blocks = blocksByFileId;
+                else
+                    blocks = blocks.Where(x => x.LocaleFlags == LocaleFlags && x.ContentFlags == ContentFlags);
+            }
+
+            if (blocks.Any())
             {
                 // update existing entries
                 foreach (var block in blocks)
