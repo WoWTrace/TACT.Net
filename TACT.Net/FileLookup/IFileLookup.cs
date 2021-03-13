@@ -14,11 +14,12 @@
         /// </summary>
         void Close();
 
-        /// <summary>
-        /// Returns the fileid associated to the specified filename
-        /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
         uint GetOrCreateFileId(string filename);
+
+        uint? GetOrCreateFileId(string path, bool createFileId = true);
+        
+        uint? Get(string path);
+
+        string? Get(uint fileId);
     }
 }
