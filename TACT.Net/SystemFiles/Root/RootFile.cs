@@ -273,7 +273,7 @@ namespace TACT.Net.Root
             {
                 // add the record to the common block
                 var localeFlags = _isClassic ? LocaleFlags.All_Classic_WoW : LocaleFlags.All_WoW;
-                var block = GetBlocks(localeFlags).First(x => x.ContentFlags == ContentFlags.None);
+                var block = GetBlocks(localeFlags).First(x => x.ContentFlags == ContentFlags.F00080000 || x.ContentFlags == ContentFlags.None);
                 block.Records[fileId] = rootRecord;
             }
         }
