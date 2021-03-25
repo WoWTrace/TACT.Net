@@ -252,7 +252,7 @@ namespace TACT.Net.Root
             if (nameHash != 0)
                 _idLookup[nameHash] = fileId;
 
-            var blocks = GetBlocks(LocaleFlags, ContentFlags);
+            var blocks = GetBlocks(LocaleFlags, ContentFlags, true);
 
             if (blocks.Count() > 1)
             {
@@ -539,26 +539,34 @@ namespace TACT.Net.Root
         /// </summary>
         /// <param name="locale"></param>
         /// <param name="content"></param>
+        /// <param name="strictFlags"></param>
         /// <returns></returns>
-        public IEnumerable<IRootBlock> GetBlocks(LocaleFlags locale, ContentFlags content = ContentFlags.None)
+        public IEnumerable<IRootBlock> GetBlocks(LocaleFlags locale, ContentFlags content = ContentFlags.None, bool strictFlags = false)
         {
             foreach (var block in _blocks)
+            {
+                if (strictFlags && block.LocaleFlags == locale && block.ContentFlags == content)
+                    yield return block;
+
                 if ((block.LocaleFlags & locale) == locale)
                     if ((block.ContentFlags & content) == content)
                         yield return block;
+            }
         }
 
         /// <summary>
         /// Returns a collection of RootBlocks filtered by fileId
         /// </summary>
         /// <param name="fileId"></param>
+        /// <param name="localeFlag"></param>
+        /// <param name="strictFlags"></param>
         /// <returns></returns>
-        public IEnumerable<IRootBlock> GetBlocksByFileId(uint fileId, LocaleFlags localeFlag = LocaleFlags.None)
+        public IEnumerable<IRootBlock> GetBlocksByFileId(uint fileId, LocaleFlags localeFlag = LocaleFlags.None, bool strictFlags = true)
         {
             if (localeFlag == LocaleFlags.None)
                 localeFlag = LocaleFlags;
 
-            var blocks = GetBlocks(localeFlag, ContentFlags);
+            var blocks = GetBlocks(localeFlag, ContentFlags, strictFlags);
 
             foreach (var block in blocks)
                 if (block.Records.TryGetValue(fileId, out var record))
