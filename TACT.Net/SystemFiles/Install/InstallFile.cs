@@ -167,6 +167,16 @@ namespace TACT.Net.Install
                     tactRepo.ConfigContainer.BuildConfig.SetValue("install", record.CKey, 0);
                     tactRepo.ConfigContainer.BuildConfig.SetValue("install", record.EKey, 1);
                 }
+
+                // update the patch config with the new values
+                if (tactRepo.ConfigContainer?.PatchConfig != null)
+                {
+                    tactRepo.ConfigContainer.PatchConfig.SetValue("install", record.CKey, 0);
+                    tactRepo.ConfigContainer.PatchConfig.SetValue("install", record.EBlock.DecompressedSize, 1);
+
+                    tactRepo.ConfigContainer.PatchConfig.SetValue("install", record.EKey, 2);
+                    tactRepo.ConfigContainer.PatchConfig.SetValue("install", record.EBlock.CompressedSize, 3);
+                }
             }
 
             Checksum = record.CKey;

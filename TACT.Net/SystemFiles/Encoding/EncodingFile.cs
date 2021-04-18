@@ -209,6 +209,16 @@ namespace TACT.Net.Encoding
                 repo.ConfigContainer.BuildConfig.SetValue("encoding", record.EKey, 1);
             }
 
+            // update the patch config with the new values
+            if (repo?.ConfigContainer?.PatchConfig != null)
+            {
+                repo.ConfigContainer.PatchConfig.SetValue("encoding", record.CKey, 0);
+                repo.ConfigContainer.PatchConfig.SetValue("encoding", record.EBlock.DecompressedSize, 1);
+
+                repo.ConfigContainer.PatchConfig.SetValue("encoding", record.EKey, 2);
+                repo.ConfigContainer.PatchConfig.SetValue("encoding", record.EBlock.CompressedSize, 3);
+            }
+
             Checksum = record.CKey;
             FilePath = record.BLTEPath;
             return record;

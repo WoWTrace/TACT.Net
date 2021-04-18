@@ -168,6 +168,16 @@ namespace TACT.Net.Download
                     tactRepo.ConfigContainer.BuildConfig.SetValue("download", record.CKey, 0);
                     tactRepo.ConfigContainer.BuildConfig.SetValue("download", record.EKey, 1);
                 }
+
+                // update the patch config with the new values
+                if (tactRepo.ConfigContainer?.PatchConfig != null)
+                {
+                    tactRepo.ConfigContainer.PatchConfig.SetValue("download", record.CKey, 0);
+                    tactRepo.ConfigContainer.PatchConfig.SetValue("download", record.EBlock.DecompressedSize, 1);
+
+                    tactRepo.ConfigContainer.PatchConfig.SetValue("download", record.EKey, 2);
+                    tactRepo.ConfigContainer.PatchConfig.SetValue("download", record.EBlock.CompressedSize, 3);
+                }
             }
 
             Checksum = record.CKey;
