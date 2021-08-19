@@ -261,7 +261,7 @@ namespace TACT.Net.Indices
                     File.Copy(prevBlob, saveLocation, true);
 
                     if (prevBlob != saveLocation)
-                        Helpers.Delete(prevBlob, true);
+                        Helpers.Delete(prevBlob);
 
                     return;
                 }
@@ -294,7 +294,7 @@ namespace TACT.Net.Indices
             }
 
             if (prevBlob != "" && prevBlob != saveLocation)
-                Helpers.Delete(prevBlob, true);
+                Helpers.Delete(prevBlob);
 
             _newEntries.Clear();
         }

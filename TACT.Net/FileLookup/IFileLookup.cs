@@ -1,4 +1,5 @@
-﻿namespace TACT.Net.FileLookup
+﻿#pragma warning disable CS8632
+namespace TACT.Net.FileLookup
 {
     public interface IFileLookup
     {
@@ -23,3 +24,4 @@
         string? Get(uint fileId);
     }
 }
+#pragma warning restore CS8632
