@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.IO;
 using System.Linq;
 using TACT.Net.BlockTable;
@@ -122,7 +123,6 @@ namespace TACT.Net.Download
             CASRecord record;
             using (var bt = new BlockTableStreamWriter(_EncodingMap[0]))
             using (var bw = new BinaryWriter(bt))
-            using (var ms = new MemoryStream())
             {
                 // Header
                 DownloadSizeHeader.EntryCount = (uint)_FileEntries.Count;
@@ -206,22 +206,27 @@ namespace TACT.Net.Download
 
         private void WriteFileEntries(BlockTableStreamWriter bt)
         {
-            using var ms = new MemoryStream();
+            var size = _FileEntries.Count * (DownloadSizeHeader.EKeySize + 4);
+            using var ms = new MemoryStream(size);
             using var bw = new BinaryWriter(ms);
+
             // ordered by descending size
-            foreach (var fileEntry in _FileEntries.Values.OrderByDescending(x => x.CompressedSize))
+            var fileEntries = _FileEntries.Values.OrderByDescending(x => x.CompressedSize);
+            foreach (var fileEntry in fileEntries)
                 fileEntry.Write(bw, DownloadSizeHeader);
 
             // batched into 0xFFFF size uncompressed blocks
             // this is for client performance and isn't mandatory
             ms.Position = 0;
-            byte[] buffer = new byte[0xFFFF];
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(0xFFFF);
             int read;
             while ((read = ms.Read(buffer)) != 0)
             {
                 bt.AddBlock(_EncodingMap[2]);
                 bt.Write(buffer, 0, read);
             }
+
+            ArrayPool<byte>.Shared.Return(buffer);
         }
 
         #endregion

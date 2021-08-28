@@ -15,7 +15,7 @@ namespace TACT.Net.Common
         /// <returns></returns>
         public static string GetCDNPath(string filename, string folder = "", string directory = "", bool create = false)
         {
-            string dir = Path.Combine(directory, folder, filename.Substring(0, 2), filename.Substring(2, 2));
+            string dir = Path.Combine(directory, folder, filename[..2], filename[2..4]);
             if (create)
                 Directory.CreateDirectory(dir);
 
@@ -31,7 +31,7 @@ namespace TACT.Net.Common
         /// <returns></returns>
         public static string GetCDNUrl(string filename, string folder)
         {
-            return string.Join("/", "tpr", "wow", folder, filename.Substring(0, 2), filename.Substring(2, 2), filename);
+            return string.Join("/", "tpr", "wow", folder, filename[..2], filename[2..4], filename);
         }
 
 
@@ -49,8 +49,7 @@ namespace TACT.Net.Common
         /// Determines a file exists before attempting to delete
         /// </summary>
         /// <param name="filename"></param>
-        /// <param name="deleteParentFolder"></param>
-        public static void Delete(string filename, bool deleteParentFolder = false)
+        public static void Delete(string filename)
         {
             if (File.Exists(filename))
                 File.Delete(filename);
@@ -77,8 +76,8 @@ namespace TACT.Net.Common
         /// <param name="folder"></param>
         public static void Delete(string filename, string directory, string folder = "data")
         {
-            string filePath = GetCDNPath(filename, folder, directory);
-            Delete(filePath, true);
+            var filePath = GetCDNPath(filename, folder, directory);
+            Delete(filePath);
         }
 
         /// <summary>
