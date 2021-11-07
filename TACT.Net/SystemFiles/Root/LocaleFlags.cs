@@ -3,7 +3,7 @@
 namespace TACT.Net.Root
 {
     [Flags]
-    public enum LocaleFlags
+    public enum LocaleFlags : uint
     {
         None = 0x0,
         enUS = 0x2,
