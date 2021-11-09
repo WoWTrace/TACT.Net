@@ -23,6 +23,11 @@ namespace TACT.Net
         public uint Build { get; private set; }
 
         /// <summary>
+        /// The client full version string of the repo
+        /// </summary>
+        public string VersionsName { get; private set; }
+
+        /// <summary>
         /// Remove unused TACT files after save storage
         /// </summary>
         public bool ActiveCleanup = false;
@@ -78,9 +83,13 @@ namespace TACT.Net
         /// <param name="product"></param>
         /// <param name="locale"></param>
         /// <param name="build"></param>
-        public void Create(string product, Locale locale, uint build)
+        /// <param name="versionName"></param>
+        public void Create(string product, Locale locale, uint build, string versionName = null)
         {
             Build = build;
+
+            if (!string.IsNullOrEmpty(versionName))
+                VersionsName = versionName;
 
             ManifestContainer = new Configs.ManifestContainer(product, locale);
             ManifestContainer.Create();
@@ -119,6 +128,10 @@ namespace TACT.Net
 
             if (uint.TryParse(ManifestContainer?.VersionsFile?.GetValue("BuildId", ManifestContainer.Locale), out uint build))
                 Build = build;
+
+            string versionsName = ManifestContainer?.VersionsFile?.GetValue("VersionsName", ManifestContainer.Locale);
+            if (!string.IsNullOrEmpty(versionsName))
+                VersionsName = versionsName;
 
             IndexContainer = new Indices.IndexContainer();
             IndexContainer.Open(directory, ConfigContainer, true);
@@ -163,6 +176,10 @@ namespace TACT.Net
 
             if (uint.TryParse(ManifestContainer?.VersionsFile?.GetValue("BuildId", locale), out uint build))
                 Build = build;
+
+            string versionsName = ManifestContainer?.VersionsFile?.GetValue("VersionsName", ManifestContainer.Locale);
+            if (!string.IsNullOrEmpty(versionsName))
+                VersionsName = versionsName;
 
             // stream Indicies
             IndexContainer = new Indices.IndexContainer();
