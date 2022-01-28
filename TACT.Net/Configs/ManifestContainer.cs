@@ -22,25 +22,27 @@ namespace TACT.Net.Configs
         #endregion
 
         #region Keys
-
         public MD5Hash BuildConfigMD5 => TryGetKey(VersionsFile, "buildconfig");
         public MD5Hash CDNConfigMD5 => TryGetKey(VersionsFile, "cdnconfig");
-
+        public string VersionsName => VersionsFile.GetValue("VersionsName", Locale);
+        public string ProductConfig => VersionsFile.GetValue("ProductConfig", Locale);
+        
         #endregion
 
         /// <summary>
         /// The Blizzard Product Code
         /// </summary>
-        public readonly string Product;
+        public string Product { get; private set; }
+
         /// <summary>
         /// Current Locale
         /// </summary>
-        public readonly Locale Locale;
-        private readonly string PatchUrl = null;
-        private readonly int OverrideBuildId;
-        private readonly string OverrideVersionName;
-        private readonly string OverrideBuildConfig;
-        private readonly string OverrideCdnConfig;
+        public Locale Locale { get; private set; }
+        private string PatchUrl = null;
+        private int OverrideBuildId;
+        private string OverrideVersionName;
+        public string OverrideBuildConfig { get; private set; }
+        private string OverrideCdnConfig;
 
         #region Constructors
 
@@ -59,6 +61,15 @@ namespace TACT.Net.Configs
             OverrideVersionName = overrideVersionName;
             OverrideBuildConfig = overrideBuildConfig;
             OverrideCdnConfig = overrideCdnConfig;
+        }
+
+        ~ManifestContainer()
+        {
+            Product = null;
+            PatchUrl = null;
+            OverrideVersionName = null;
+            OverrideBuildConfig = null;
+            OverrideCdnConfig = null;
         }
         #endregion
 
@@ -87,12 +98,24 @@ namespace TACT.Net.Configs
         /// <summary>
         /// Opens the CDNs, Versions from Ribbit and the config files from Blizzard's CDN
         /// </summary>
-        public void OpenRemote()
+        public void OpenRemote(string remoteCacheDirectory = null)
         {
             if (string.IsNullOrEmpty(PatchUrl))
                 OpenRemoteRibbit();
             else
                 OpenRemotePatchUrl();
+
+            if (!string.IsNullOrEmpty(remoteCacheDirectory) && !string.IsNullOrEmpty(VersionsFile.GetValue("BuildConfig", Locale)))
+            {
+                remoteCacheDirectory = Path.Combine(remoteCacheDirectory, "manifest", VersionsFile.GetValue("BuildConfig", Locale));
+                string remoteCacheDirectoryWithProduct = Path.Combine(remoteCacheDirectory, Product);
+
+                if (!Directory.Exists(remoteCacheDirectoryWithProduct))
+                    Directory.CreateDirectory(remoteCacheDirectoryWithProduct);
+
+                if (!File.Exists(Path.Combine(remoteCacheDirectoryWithProduct, ConfigType.CDNs.ToString().ToLowerInvariant())) || !File.Exists(Path.Combine(remoteCacheDirectoryWithProduct, ConfigType.Versions.ToString().ToLowerInvariant())))
+                    Save(remoteCacheDirectory);
+            }
 
             OverrideRemoteVersion();
         }

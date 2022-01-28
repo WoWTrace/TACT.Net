@@ -17,6 +17,7 @@ namespace TACT.Net.Network
         public bool ApplyDecryption { get; set; }
 
         private int _hostIndex = 0;
+        private string _remoteCacheDirectory = null;
 
         #region Constructors
 
@@ -24,11 +25,12 @@ namespace TACT.Net.Network
         /// Creates a new CDN Client without any hosts
         /// </summary>
         /// <param name="applyDecryption"></param>
-        private CDNClient(bool applyDecryption)
+        private CDNClient(bool applyDecryption, string remoteCacheDirectory = null)
         {
             Hosts = new List<string>();
             Armadillo = new Armadillo();
             ApplyDecryption = applyDecryption;
+            _remoteCacheDirectory = remoteCacheDirectory;
 
             if (ServicePointManager.DefaultConnectionLimit != ushort.MaxValue)
                 ServicePointManager.DefaultConnectionLimit = ushort.MaxValue;
@@ -39,7 +41,7 @@ namespace TACT.Net.Network
         /// </summary>
         /// <param name="configContainer"></param>
         /// <param name="applyDecryption"></param>
-        public CDNClient(Configs.ManifestContainer manifestContainer, bool applyDecryption = false) : this(applyDecryption)
+        public CDNClient(Configs.ManifestContainer manifestContainer, bool applyDecryption = false, string remoteCacheDirectory = null) : this(applyDecryption, remoteCacheDirectory)
         {
             if (manifestContainer?.CDNsFile == null)
                 throw new ArgumentException("Unable to load CDNs file");
@@ -104,6 +106,19 @@ namespace TACT.Net.Network
             return null;
         }
 
+        public Stream OpenCachedFileStream(string cdnpath)
+        {
+            if (string.IsNullOrEmpty(_remoteCacheDirectory))
+                return OpenStream(cdnpath).Result;
+
+            string filePath = Path.Combine(_remoteCacheDirectory, cdnpath);
+            if (!File.Exists(filePath))
+                if (!DownloadFile(cdnpath, filePath).Result)
+                    return null;
+
+            return File.OpenRead(filePath);
+        }
+
         /// <summary>
         /// Attempts to download a file from Blizzard's CDN
         /// </summary>
@@ -115,6 +130,9 @@ namespace TACT.Net.Network
             // used as a 404 check
             if (await GetContentLength(cdnpath) == -1)
                 return false;
+
+            if (!Directory.Exists(Path.GetDirectoryName(filepath)))
+                Directory.CreateDirectory(Path.GetDirectoryName(filepath));
 
             foreach (var host in GetHosts())
             {

@@ -29,9 +29,9 @@ namespace TACT.Net.Common
         /// <param name="folder"></param>
         /// <param name="directory"></param>
         /// <returns></returns>
-        public static string GetCDNUrl(string filename, string folder)
+        public static string GetCDNUrl(string filename, string folder, string tprPath = "tpr/wow")
         {
-            return string.Join("/", "tpr", "wow", folder, filename[..2], filename[2..4], filename);
+            return string.Join("/", tprPath, folder, filename[..2], filename[2..4], filename);
         }
 
 

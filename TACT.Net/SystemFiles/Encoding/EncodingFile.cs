@@ -97,7 +97,7 @@ namespace TACT.Net.Encoding
 
             string url = Helpers.GetCDNUrl(ekey.ToString(), "data");
 
-            using var stream = client.OpenStream(url).Result;
+            using var stream = client.OpenCachedFileStream(url);
             using var bt = new BlockTableStreamReader(stream);
             Read(bt);
         }
@@ -506,7 +506,11 @@ namespace TACT.Net.Encoding
 
             return "b:{" + sb.ToString().ToLowerInvariant() + "}";
         }
-
         #endregion
+        public void Close()
+        {
+            _CKeyEntries.Clear();
+            _EKeyEntries.Clear();
+        }
     }
 }

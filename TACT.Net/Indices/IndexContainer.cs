@@ -82,13 +82,13 @@ namespace TACT.Net.Indices
         /// </summary>
         /// <param name="manifestContainer"></param>
         /// <param name="useParallelism"></param>
-        public void OpenRemote(Configs.ConfigContainer configContainer, Configs.ManifestContainer manifestContainer, bool useParallelism = false)
+        public void OpenRemote(Configs.ConfigContainer configContainer, Configs.ManifestContainer manifestContainer, bool useParallelism = false, string remoteCacheDirectory = null)
         {
             IsRemote = true;
 
             _indices.Clear();
             _useParallelism = useParallelism;
-            _client = new CDNClient(manifestContainer);
+            _client = new CDNClient(manifestContainer, false, remoteCacheDirectory);
 
             ParallelOptions options = new ParallelOptions() { MaxDegreeOfParallelism = useParallelism ? -1 : 1 };
 
@@ -519,7 +519,13 @@ namespace TACT.Net.Indices
 
             indexFile.Write(directory, configContainer);
         }
-
         #endregion
+
+        public void Close()
+        {
+            QueuedEntries.Clear();
+            _indices.Clear();
+            _client = null;
+        }
     }
 }

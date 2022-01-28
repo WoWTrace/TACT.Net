@@ -36,6 +36,11 @@ namespace TACT.Net.Configs
             _data = new StringCollection(StringComparer.OrdinalIgnoreCase);
         }
 
+        ~KeyValueConfig()
+        {
+            _data.Clear();
+        }
+
         /// <summary>
         /// Creates a new config of <paramref name="type"/>
         /// </summary>

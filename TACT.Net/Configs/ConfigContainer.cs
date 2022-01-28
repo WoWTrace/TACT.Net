@@ -110,7 +110,7 @@ namespace TACT.Net.Configs
         /// <summary>
         /// Opens the CDNs, Versions from Ribbit and the config files from Blizzard's CDN
         /// </summary>
-        public void OpenRemote(ManifestContainer manifestContainer)
+        public void OpenRemote(ManifestContainer manifestContainer, string remoteCacheDirectory = null)
         {
             if (manifestContainer?.VersionsFile == null || manifestContainer?.CDNsFile == null)
                 throw new Exception("Versions and CDNs files must be loaded first");
@@ -118,24 +118,24 @@ namespace TACT.Net.Configs
             if (!manifestContainer.VersionsFile.HasLocale(manifestContainer.Locale))
                 throw new Exception($"Versions missing {manifestContainer.Locale} locale");
 
-            var cdnClient = new CDNClient(manifestContainer);
+            var cdnClient = new CDNClient(manifestContainer, false, remoteCacheDirectory);
 
             if (manifestContainer.BuildConfigMD5.Value != null)
             {
                 string configUrl = Helpers.GetCDNUrl(manifestContainer.BuildConfigMD5.ToString(), "config");
-                BuildConfig = new KeyValueConfig(cdnClient.OpenStream(configUrl).Result, ConfigType.BuildConfig);
+                BuildConfig = new KeyValueConfig(cdnClient.OpenCachedFileStream(configUrl), ConfigType.BuildConfig);
             }
 
             if (manifestContainer.CDNConfigMD5.Value != null)
             {
                 string configUrl = Helpers.GetCDNUrl(manifestContainer.CDNConfigMD5.ToString(), "config");
-                CDNConfig = new KeyValueConfig(cdnClient.OpenStream(configUrl).Result, ConfigType.CDNConfig);
+                CDNConfig = new KeyValueConfig(cdnClient.OpenCachedFileStream(configUrl), ConfigType.CDNConfig);
             }
 
             if (PatchConfigMD5.Value != null)
             {
                 string configUrl = Helpers.GetCDNUrl(PatchConfigMD5.ToString(), "config");
-                PatchConfig = new KeyValueConfig(cdnClient.OpenStream(configUrl).Result, ConfigType.PatchConfig);
+                PatchConfig = new KeyValueConfig(cdnClient.OpenCachedFileStream(configUrl), ConfigType.PatchConfig);
             }
         }
 

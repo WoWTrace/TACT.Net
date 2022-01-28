@@ -61,7 +61,7 @@ namespace TACT.Net.Patch
         {
             string url = Helpers.GetCDNUrl(ekey.ToString(), "patch");
 
-            using var stream = client.OpenStream(url).Result;
+            using var stream = client.OpenCachedFileStream(url);
             Read(stream);
         }
 
@@ -229,5 +229,11 @@ namespace TACT.Net.Patch
         }        
 
         #endregion
+
+        public void Close()
+        {
+            PatchHeader = null;
+            _PatchEntries.Clear();
+        }
     }
 }

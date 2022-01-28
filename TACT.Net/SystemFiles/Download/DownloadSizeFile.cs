@@ -70,7 +70,7 @@ namespace TACT.Net.Download
         {
             string url = Helpers.GetCDNUrl(ekey.ToString(), "data");
 
-            using var stream = client.OpenStream(url).Result;
+            using var stream = client.OpenCachedFileStream(url);
             using var bt = new BlockTableStreamReader(stream);
             Read(bt);
         }
@@ -230,5 +230,10 @@ namespace TACT.Net.Download
         }
 
         #endregion
+
+        public void Close()
+        {
+            _FileEntries.Clear();
+        }
     }
 }

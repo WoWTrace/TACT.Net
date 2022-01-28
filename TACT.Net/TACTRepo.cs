@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using TACT.Net.Common;
+using TACT.Net.Configs;
 using TACT.Net.Cryptography;
 using TACT.Net.Network;
 
@@ -31,6 +32,16 @@ namespace TACT.Net
         /// Remove unused TACT files after save storage
         /// </summary>
         public bool ActiveCleanup = false;
+
+        /// <summary>
+        /// Allow to cache system files downloaded from remote repo
+        /// </summary>
+        public bool RemoteCache = false;
+
+        /// <summary>
+        /// Must be set to cache remote system files
+        /// </summary>
+        public string RemoteCacheDirectory = null;
 
         /// <summary>
         /// Cleanup queue
@@ -169,10 +180,26 @@ namespace TACT.Net
         /// <param name="locale"></param>
         public void OpenRemote(string product, Locale locale)
         {
-            ManifestContainer = new Configs.ManifestContainer(product, locale);
+            if (ManifestContainer == null)
+                ManifestContainer = new Configs.ManifestContainer(product, locale);
+
+            if (RemoteCache && !string.IsNullOrEmpty(RemoteCacheDirectory))
+            {
+                if (!string.IsNullOrEmpty(ManifestContainer.OverrideBuildConfig))
+                {
+                    string manifestCache = Path.Combine(RemoteCacheDirectory, ManifestContainer.OverrideBuildConfig, product);
+
+                    if (File.Exists(Path.Combine(manifestCache, "manifest", ConfigType.CDNs.ToString().ToLowerInvariant())) && File.Exists(Path.Combine(manifestCache, "manifest", ConfigType.Versions.ToString().ToLowerInvariant())))
+                        ManifestContainer.OpenLocal(manifestCache);
+                }
+            }
+
+            string remoteCacheDirectory = RemoteCache ? RemoteCacheDirectory : null;
+
+            ManifestContainer.OpenRemote(remoteCacheDirectory);
 
             ConfigContainer = new Configs.ConfigContainer();
-            ConfigContainer.OpenRemote(ManifestContainer);
+            ConfigContainer.OpenRemote(ManifestContainer, remoteCacheDirectory);
 
             if (uint.TryParse(ManifestContainer?.VersionsFile?.GetValue("BuildId", locale), out uint build))
                 Build = build;
@@ -183,9 +210,9 @@ namespace TACT.Net
 
             // stream Indicies
             IndexContainer = new Indices.IndexContainer();
-            IndexContainer.OpenRemote(ConfigContainer, ManifestContainer, true);
+            IndexContainer.OpenRemote(ConfigContainer, ManifestContainer, true, remoteCacheDirectory);
 
-            var cdnClient = new CDNClient(ManifestContainer);
+            var cdnClient = new CDNClient(ManifestContainer, false, remoteCacheDirectory);
 
             if (ConfigContainer.EncodingEKey.Value != null)
             {
@@ -310,6 +337,33 @@ namespace TACT.Net
             RootFile?.FileLookup?.Close();
 
             Cleanup(directory);
+        }
+
+        public void Close()
+        {
+            IndexContainer?.Close();
+            IndexContainer = null;
+
+            PatchFile?.Close();
+            PatchFile = null;
+
+            RootFile?.Close();
+            RootFile = null;
+
+            DownloadFile?.Close();
+            DownloadFile = null;
+
+            DownloadSizeFile?.Close();
+            DownloadSizeFile = null;
+
+            InstallFile?.Close();
+            InstallFile = null;
+
+            EncodingFile?.Close();
+            EncodingFile = null;
+
+            ConfigContainer = null;
+            ManifestContainer = null;
         }
 
         private void Cleanup(string directory)

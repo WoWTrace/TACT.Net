@@ -105,7 +105,7 @@ namespace TACT.Net.Root
 
             string url = Helpers.GetCDNUrl(ekey.ToString(), "data");
 
-            using var stream = client.OpenStream(url).Result;
+            using var stream = client.OpenCachedFileStream(url);
             using var bt = new BlockTableStreamReader(stream);
             Read(bt);
         }
@@ -425,6 +425,7 @@ namespace TACT.Net.Root
 
             return false;
         }
+
         /// <summary>
         /// Determines if the supplied NameHash exists
         /// </summary>
@@ -644,5 +645,12 @@ namespace TACT.Net.Root
         public ulong HashName(string filename) => _lookup3.ComputeHash(filename);
 
         #endregion
+
+        public void Close()
+        {
+            FileLookup?.Close();
+            _blocks.Clear();
+            _idLookup.Clear();
+        }
     }
 }
