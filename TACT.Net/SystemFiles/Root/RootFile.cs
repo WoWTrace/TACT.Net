@@ -535,6 +535,16 @@ namespace TACT.Net.Root
 
             return true;
         }
+
+        /// <summary>
+        /// Returns a collection of all RootBlocks
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<IRootBlock> GetAllBlocks()
+        {
+            return _blocks;
+        }
+
         /// <summary>
         /// Returns a collection of RootBlocks filtered by their Locale and Content flags
         /// </summary>
@@ -580,6 +590,7 @@ namespace TACT.Net.Root
         /// <param name="rootBlock"></param>
         /// <returns></returns>
         public bool RemoveBlock(IRootBlock rootBlock) => _blocks.Remove(rootBlock);
+
         /// <summary>
         /// Removes all RootBlocks with the specified Locale and Content flag combination
         /// </summary>
