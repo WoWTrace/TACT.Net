@@ -105,6 +105,8 @@ namespace TACT.Net.Configs
             else
                 OpenRemotePatchUrl();
 
+            OverrideRemoteVersion();
+
             if (!string.IsNullOrEmpty(remoteCacheDirectory) && !string.IsNullOrEmpty(VersionsFile.GetValue("BuildConfig", Locale)))
             {
                 remoteCacheDirectory = Path.Combine(remoteCacheDirectory, "manifest", VersionsFile.GetValue("BuildConfig", Locale));
@@ -116,8 +118,6 @@ namespace TACT.Net.Configs
                 if (!File.Exists(Path.Combine(remoteCacheDirectoryWithProduct, ConfigType.CDNs.ToString().ToLowerInvariant())) || !File.Exists(Path.Combine(remoteCacheDirectoryWithProduct, ConfigType.Versions.ToString().ToLowerInvariant())))
                     Save(remoteCacheDirectory);
             }
-
-            OverrideRemoteVersion();
         }
 
         private void OpenRemoteRibbit()

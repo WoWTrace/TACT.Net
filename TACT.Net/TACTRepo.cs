@@ -183,20 +183,25 @@ namespace TACT.Net
             if (ManifestContainer == null)
                 ManifestContainer = new Configs.ManifestContainer(product, locale);
 
+            bool manifestLoadedFromLocal = false;
             if (RemoteCache && !string.IsNullOrEmpty(RemoteCacheDirectory))
             {
                 if (!string.IsNullOrEmpty(ManifestContainer.OverrideBuildConfig))
                 {
-                    string manifestCache = Path.Combine(RemoteCacheDirectory, ManifestContainer.OverrideBuildConfig, product);
+                    string manifestCache = Path.Combine(RemoteCacheDirectory, "manifest", ManifestContainer.OverrideBuildConfig, product);
 
-                    if (File.Exists(Path.Combine(manifestCache, "manifest", ConfigType.CDNs.ToString().ToLowerInvariant())) && File.Exists(Path.Combine(manifestCache, "manifest", ConfigType.Versions.ToString().ToLowerInvariant())))
+                    if (File.Exists(Path.Combine(manifestCache, ConfigType.CDNs.ToString().ToLowerInvariant())) && File.Exists(Path.Combine(manifestCache, ConfigType.Versions.ToString().ToLowerInvariant())))
+                    {
                         ManifestContainer.OpenLocal(manifestCache);
+                        manifestLoadedFromLocal = true;
+                    }
                 }
             }
 
             string remoteCacheDirectory = RemoteCache ? RemoteCacheDirectory : null;
 
-            ManifestContainer.OpenRemote(remoteCacheDirectory);
+            if (!manifestLoadedFromLocal)
+                ManifestContainer.OpenRemote(remoteCacheDirectory);
 
             ConfigContainer = new Configs.ConfigContainer();
             ConfigContainer.OpenRemote(ManifestContainer, remoteCacheDirectory);
@@ -238,7 +243,7 @@ namespace TACT.Net
                 // Stream DownloadSizeFile
                 if (ConfigContainer.DownloadSizeEKey.Value != null)
                     DownloadSizeFile = new Download.DownloadSizeFile(cdnClient, ConfigContainer.DownloadSizeEKey);
-                else if (EncodingFile.TryGetCKeyEntry(ConfigContainer.DownloadSizeCKey, out entry))
+                else if (ConfigContainer.DownloadSizeCKey.Value != null && EncodingFile.TryGetCKeyEntry(ConfigContainer.DownloadSizeCKey, out entry))
                     DownloadSizeFile = new Download.DownloadSizeFile(cdnClient, entry.EKeys[0]);
             }
 
