@@ -101,7 +101,7 @@ namespace TACT.Net.Indices
 
         private void Read(Stream stream)
         {
-            if (!stream.CanRead || stream.Length <= 0)
+            if (stream == null || !stream.CanRead || stream.Length <= 0)
                 throw new NotSupportedException($"Unable to read IndexFile stream");
 
             using var md5 = MD5.Create();
