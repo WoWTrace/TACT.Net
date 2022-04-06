@@ -93,9 +93,16 @@ namespace TACT.Net.Indices
             ParallelOptions options = new ParallelOptions() { MaxDegreeOfParallelism = useParallelism ? -1 : 1 };
 
             // stream data archive indicies
-            var archives = configContainer.CDNConfig.GetValues("archives");
-            if (archives != null && archives.Count > 0)
-                Parallel.ForEach(archives, options, index => _indices.Add(new IndexFile(_client, index, IndexType.Data)));
+            try
+            {
+                var archives = configContainer.CDNConfig.GetValues("archives");
+                if (archives != null && archives.Count > 0)
+                    Parallel.ForEach(archives, options, index => _indices.Add(new IndexFile(_client, index, IndexType.Data)));
+            }
+            catch (Exception ex)
+            {
+                // Allow missing indices
+            }
 
             // stream patch archive indices
             var patcharchives = configContainer.CDNConfig.GetValues("patch-archives");
